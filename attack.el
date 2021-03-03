@@ -1,10 +1,12 @@
+;;; package -- Summery
 ;;; attack.el
-;;;
+;;; 
 ;;; p.107あたりのコードを elisp でやってみた
 
 
 (defun attack ()
   (interactive)
+  (make-adventure-world)
   (let ((monster 100)    ; monster -- モンスターのライフポイント
         (hero 100)       ; hero -- 勇者のライフポイント
         monster-damage
@@ -35,4 +37,21 @@
                   enemy damage life-point))
   life-point)
 
-;; 修正時刻: Wed Mar  3 21:52:43 2021
+;;
+(defun make-adventure-world ()
+  (interactive)
+  (generate-new-buffer "adventure-world")
+  (switch-to-buffer "adventure-world")
+  (erase-buffer)
+  (insert "===================================================\n")
+  (insert "|                                                 |\n")
+  (insert "|            ようこそ、冒険の世界へ!              |\n")
+  (insert "|                                                 |\n")
+  (insert "|               Adventure World                   |\n")
+  (insert "|                                                 |\n")
+  (insert "===================================================\n\n"))
+
+;; 修正時刻: Thu Mar  4 07:32:51 2021
+
+(provide 'attack)
+;;; attack.el end here
