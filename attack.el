@@ -12,40 +12,50 @@
 
 ;; @ -- モンスターの位置
 
-(defvar place)
-(defvar game-status)
-(defvar nowpos-x)
-(defvar nowpos-y)
-(defvar nowpos)
+(defvar place)                          ; ゲームエリア。配列。
+(defvar game-status)                    ; "play" / "end"
+(defvar nowpos-x)                       ; プレイヤーの現在位置: x位置
+(defvar nowpos-y)                       ; プレイヤーの現在位置: y位置
+(defvar nowpos)                         ; プレイヤーの現在位置の内容。初期値は nil。
+                                        ; "monster" が格納されている場合もある。
 (defconst at-monster-menu "a: 戦う   b: 逃げる > ")
 (defconst direction-choice "e:東 n:北 w:西 s:南 (q:終了) > ")
+(defconst edge-max 10)                  ; 1辺のマス数。
 
+;; (y x)位置のセルの内容を取得する
 (defun get-place (y x)
   (aref (aref place y) x))
 
+;; (y x)位置のセルに thing をセットする。
 (defun set-place (y x thing)
   (aset (aref place y) x thing))
 
+;; ゲームエリアを作成する。
 (defun make-area ()
-  (setq place (make-vector 5 nil))
-  (aset place 0 (make-vector 5 nil))
-  (aset place 1 (make-vector 5 nil))
-  (aset place 2 (make-vector 5 nil))
-  (aset place 3 (make-vector 5 nil))
-  (aset place 4 (make-vector 5 nil))
+  ;; place を edge-max個の配列とし、初期値に nil をセットする。
+  (setq place (make-vector edge-max nil))
+  (let ((edge 0))                       ; edge -- ローカル変数
+    (while (< edge edge-max)
+      ;; edge番目の place に edge-max個の配列を作成し、初期値に nil をセット。
+      (aset place edge (make-vector edge-max nil))
+      (setq edge (+ edge 1))))
+  ;; monster を配置する
   (set-monster))
-;; y:4 x:1 <- monster
-;; y:0 x:2 <- monster
-;; y:2 x:1 <- monster
-;; y:0 x:3 <- monster
-;; y:3 x:1 <- monster
+
+;; 5x5の2次元配列を作る。初期値は nil
+;; (aset place 0 (make-vector 5 nil))
+;; (aset place 1 (make-vector 5 nil))
+;; (aset place 2 (make-vector 5 nil))
+;; (aset place 3 (make-vector 5 nil))
+;; (aset place 4 (make-vector 5 nil))
+
 
 
 (defun set-monster ()
   (let ((count 0))
-    (while (< count 5)
-      (let ((y (random 5))
-            (x (random 5)))
+    (while (< count edge-max)
+      (let ((y (random edge-max))
+            (x (random edge-max)))
         (if (equal (get-place y x) nil)
             (progn
               (set-place y x "monster")
@@ -54,13 +64,18 @@
               )
           )))))
 
-(defun game()
+(defun game-pre ()
+  (interactive)
+  (make-area))
+
+
+(defun game ()
   (interactive)
   (make-area)
   (make-adventure-world)
   (setq game-status "play")
-  (setq nowpos-y (random 5))
-  (setq nowpos-x (random 5))
+  (setq nowpos-y (random edge-max))
+  (setq nowpos-x (random edge-max))
   (print-nowpos)
   (if (equal nowpos "monster") (attack))
   (while (equal game-status "play")
@@ -80,16 +95,16 @@
           (setq nowpos-y 0)))
      ((equal dir "s")
       (setq nowpos-y (+ nowpos-y 1))
-      (if (> nowpos-y 4)
-          (setq nowpos-y 4)))
+      (if (> nowpos-y (- edge-max 1))
+          (setq nowpos-y (- edge-max 1))))
      ((equal dir "w")
       (setq nowpos-x (- nowpos-x 1))
       (if (< nowpos-x 0)
           (setq nowpos-x 0)))
      ((equal dir "e")
       (setq nowpos-x (+ nowpos-x 1))
-      (if (> nowpos-x 4)
-          (setq nowpos-x 4)))
+      (if (> nowpos-x (- edge-max 1))
+          (setq nowpos-x (- edge-max 1))))
      ((equal dir "q")
       (setq game-status "end")))))
 
@@ -165,13 +180,19 @@
   (insert "|                                                 |\n")
   (insert "|               Adventure World                   |\n")
   (insert "|                                                 |\n")
-  (insert "===================================================\n\n")
-  (insert "       0 1 2 3 4 X\n")
-  (insert "   Y 0|.|.|.|.|.|             北\n")
-  (insert "     1|.|.|.|.|.|             |\n")
-  (insert "     2|.|.|.|.|.|         西--+--東\n")
-  (insert "     3|.|.|.|.|.|             |\n")
-  (insert "     4|.|.|.|.|.|             南\n\n")
+  (insert "===================================================\n")
+  (insert "       X\n")
+  (insert "       0 1 2 3 4 5 6 7 8 9\n")
+  (insert "   Y 0|.|.|.|.|.|.|.|.|.|.|             北\n")
+  (insert "     1|.|.|.|.|.|.|.|.|.|.|             |\n")
+  (insert "     2|.|.|.|.|.|.|.|.|.|.|         西--+--東\n")
+  (insert "     3|.|.|.|.|.|.|.|.|.|.|             |\n")
+  (insert "     4|.|.|.|.|.|.|.|.|.|.|             南\n")
+  (insert "     5|.|.|.|.|.|.|.|.|.|.|\n")
+  (insert "     6|.|.|.|.|.|.|.|.|.|.|\n")
+  (insert "     7|.|.|.|.|.|.|.|.|.|.|\n")
+  (insert "     8|.|.|.|.|.|.|.|.|.|.|\n")
+  (insert "     9|.|.|.|.|.|.|.|.|.|.|\n\n")
 )
 
 
@@ -179,7 +200,7 @@
 
 
 
-;; 修正時刻: Thu Mar  4 22:55:54 2021
+;; 修正時刻: Fri Mar  5 07:47:30 2021
 
 (provide 'attack)
 ;;; attack.el end here
