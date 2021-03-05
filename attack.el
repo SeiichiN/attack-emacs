@@ -226,12 +226,23 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
+;;------------------------------
+;; y:4 x:7 <- monster
+;; y:5 x:2 <- monster
+;; y:5 x:6 <- monster
+;; y:2 x:5 <- monster
+;; y:5 x:1 <- monster
+;; y:0 x:4 <- monster
+;; y:8 x:2 <- monster
+;; y:0 x:1 <- monster
+;; y:2 x:0 <- monster
+;; y:8 x:6 <- monster
 
 
 
 
 
-;; 修正時刻: Fri Mar  5 15:02:52 2021
+;; 修正時刻: Fri Mar  5 16:18:09 2021
 
 (provide 'attack)
 ;;; attack.el end here

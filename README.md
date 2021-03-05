@@ -12,7 +12,7 @@ Emacs-Lispの練習
 C-x C-f で attack.el を読み込む。
 M-x eval-buffer で、attack.el を評価する。
 
-適当にバッファを開いて、そこで、M-x attack とする。
+M-x game とすると、新しいバッファが開いてゲームが開始する。
 
 
-<!-- 修正時刻: Wed Mar  3 21:58:51 2021 -->
+<!-- 修正時刻: Fri Mar  5 15:13:37 2021 -->
