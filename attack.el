@@ -26,6 +26,11 @@
 (defvar nowpos)                         ; プレイヤーの現在位置の内容。初期値は nil。
                                         ; "monster" が格納されている場合もある。
 (defvar monster-list)
+(defconst goblin '((name . "ゴブリン") (attack-point . 20) (life-point . 60)))
+(defconst oak '((name . "オーク") (attack-point . 50) (life-point . 80)))
+(defconst dragon '((name . "ドラゴン") (attack-point . 80) (life-point . 100)))
+(defconst alist-monster '((0 . goblin) (1 . oak) (2 . dragon)))
+
 (defconst at-monster-menu "a: 戦う   b: 逃げる > ")
 (defconst direction-choice "e:東 n:北 w:西 s:南 (q:終了) > ")
 (defconst edge-max 10)                  ; 1辺のマス数。
@@ -62,14 +67,21 @@
 (defun set-power ()
     (cdr (assoc (random 5) attack-power)))
 
+(defun get-monster-name (mon)
+  (interactive)
+  (cdr (assoc 'name mon)))
+
+(defun select-monster ()
+  (cdr (assoc (random 3) alist-monster)))
+
 (defun set-monster ()
   "モンスターをランダムに配置する."
   (let ((count 0))
     (setq monster-list ())
     (while (< count edge-max)
-      (let ((y (random edge-max))
-            (x (random edge-max)))
-        (if (equal (get-place y x) nil)
+      (let ((y (random edge-max))              ; ランダムに y を決定
+            (x (random edge-max)))             ; ランダムに x を決定
+        (if (equal (get-place y x) nil)        ; (y x) が nil ならば
             (progn
               (set-place y x "monster")
               (setq monster-list (cons (list y x) monster-list))
@@ -166,7 +178,7 @@
       (if (equal attack-end nil)
           (setq choice (read-string at-monster-menu))))
     (if (equal attack-end nil)
-        (insert "勇者は逃げた。ひたすら逃げた。"))))
+        (insert "勇者は逃げた。ひたすら逃げた。\n"))))
 
 (defun win-at-monster ()
   "モンスターをやっつけたら、その位置からモンスターを消去."
@@ -222,7 +234,9 @@
   (goto-char (point-max))
   (search-backward "monster-info-area")
   (forward-line 1)
-  (insert ";;------------------------------\n")
+  (insert ";;-------------------- ")
+  (insert (current-time-string))
+  (insert " ----\n")
   (while monster-list
     (insert (format ";; y:%d x:%d <- monster\n"
                     (car (car monster-list))
@@ -231,24 +245,24 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
-;;------------------------------
-;; y:2 x:4 <- monster
+;;-------------------- Sat Mar  6 05:09:34 2021 ----
+;; y:3 x:3 <- monster
+;; y:8 x:8 <- monster
+;; y:6 x:9 <- monster
+;; y:5 x:0 <- monster
 ;; y:3 x:8 <- monster
-;; y:7 x:6 <- monster
-;; y:2 x:2 <- monster
-;; y:9 x:3 <- monster
-;; y:2 x:9 <- monster
-;; y:5 x:2 <- monster
-;; y:1 x:4 <- monster
-;; y:0 x:0 <- monster
-;; y:9 x:7 <- monster
+;; y:5 x:9 <- monster
+;; y:1 x:8 <- monster
+;; y:9 x:8 <- monster
+;; y:8 x:2 <- monster
+;; y:8 x:4 <- monster
 
 
 
 
 
 
-;; 修正時刻: Fri Mar  5 20:20:48 2021
+;; 修正時刻: Sat Mar  6 07:29:41 2021
 
 (provide 'attack)
-;;; attack.el end here
+;;; attack.el ends here
