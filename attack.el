@@ -30,6 +30,9 @@
 (defconst direction-choice "e:東 n:北 w:西 s:南 (q:終了) > ")
 (defconst edge-max 10)                  ; 1辺のマス数。
 
+(defconst attack-power '((0 . 10) (1 . 20) (2 . 30) (3 . 40) (4 . 50)))
+
+
 (defun get-place (y x)
   "(y x)位置のセルの内容を取得する."
   (aref (aref place y) x))
@@ -56,6 +59,8 @@
 ;; (aset place 4 (make-vector 5 nil))
 
 
+(defun set-power ()
+    (cdr (assoc (random 5) attack-power)))
 
 (defun set-monster ()
   "モンスターをランダムに配置する."
@@ -227,22 +232,23 @@
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
 ;;------------------------------
-;; y:4 x:7 <- monster
+;; y:2 x:4 <- monster
+;; y:3 x:8 <- monster
+;; y:7 x:6 <- monster
+;; y:2 x:2 <- monster
+;; y:9 x:3 <- monster
+;; y:2 x:9 <- monster
 ;; y:5 x:2 <- monster
-;; y:5 x:6 <- monster
-;; y:2 x:5 <- monster
-;; y:5 x:1 <- monster
-;; y:0 x:4 <- monster
-;; y:8 x:2 <- monster
-;; y:0 x:1 <- monster
-;; y:2 x:0 <- monster
-;; y:8 x:6 <- monster
+;; y:1 x:4 <- monster
+;; y:0 x:0 <- monster
+;; y:9 x:7 <- monster
 
 
 
 
 
-;; 修正時刻: Fri Mar  5 16:18:09 2021
+
+;; 修正時刻: Fri Mar  5 20:20:48 2021
 
 (provide 'attack)
 ;;; attack.el end here
