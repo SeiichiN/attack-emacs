@@ -25,6 +25,8 @@
 (defvar nowpos-y)                       ; プレイヤーの現在位置: y位置
 (defvar nowpos)                         ; プレイヤーの現在位置の内容。初期値は nil。
                                         ; "monster" が格納されている場合もある。
+(defvar inventory-list '((gold . 0) (weapon . "non")))              ; プレイヤーの持ち物
+
 (defvar monster-list)
 (defconst goblin '((name . "ゴブリン") (attack-point . 20) (life-point . 60)))
 (defconst oak    '((name . "オーク")   (attack-point . 50) (life-point . 80)))
@@ -38,6 +40,10 @@
 (defconst attack-power '((0 . 10) (1 . 20) (2 . 30) (3 . 40) (4 . 50)))
 ;; (defconst start-p 397)
 (defconst message-area-line 22)
+
+(defvar gold-list ())
+(defconst gold-min 20)
+(defconst gold-max 80)                  ; 20...100 にするつもり.
 
 (defun get-place (y x)
   "(Y X)位置のセルの内容を取得する."
@@ -55,7 +61,8 @@
       ;; edge番目の place に edge-max個の配列を作成し、初期値に nil をセット。
       (aset place edge (make-vector edge-max nil))
       (setq edge (+ edge 1))))
-  (set-monster))                        ; monster を配置する
+  (set-monster)                        ; monster を配置する
+  (set-gold))                          ; gold を配置する
 
 ;; 5x5の2次元配列を作る。初期値は nil
 ;; (aset place 0 (make-vector 5 nil))
@@ -118,6 +125,27 @@
               )))))
   (disp-monster-info))        ; デバッグ用にモンスターの位置を出力する
 
+(defun set-gold ()
+  "ゴールドをランダムに配置する."
+  (let ((count 0))
+    (while (< count 5)
+      (let ((y (random edge-max))
+            (x (random edge-max)))
+        (if (equal (get-place y x) nil)
+            (progn
+              (set-place y x "gold")
+              (setq gold-list (cons (list y x) gold-list))
+              (setq count (+ count 1)))))))
+  (disp-gold-info))
+
+(defun get-item (item val)
+  "ITEM -- アイテムの種類   val -- その値・名前."
+  (cond
+   ((equal item "gold")
+    (setq newval (+ (car (cdr (assoc 'gold inventory-list))) val))
+    (push '(gold newval) inventory-list))
+   t))
+
 (defun game-pre ()
   "ゲームエリアの作成だけをする."
   (interactive)
@@ -134,16 +162,17 @@
   (setq nowpos-y (random edge-max))          ; 開始時の y位置
   (setq nowpos-x (random edge-max))          ; 開始時の x位置
   (move-cursor-first-and-print nowpos-y nowpos-x)
-  (print-nowpos)                             ; 開始時の位置の情報
+  (getinfo-nowpos)                             ; 開始時の位置の情報
   (if (equal nowpos "monster")               ; ゲーム開始いきなり...
       (decide-monster))                      ; ...現在位置にモンスターがいれば
   (while (equal game-status "play")          ; "play"の間は続行
     (move)                                   ; プレイヤーの移動
-    (print-nowpos)                           ; 移動した位置の情報を表示
+    (getinfo-nowpos)                           ; 移動した位置の情報を表示
     (move-cursor nowpos-y nowpos-x)
     (print-cursor)
-    (if (equal nowpos "monster") (decide-monster)))  ; もしモンスター
+    (if (equal nowpos "monster") (decide-monster))  ; もしモンスター
                                         ; がいたら
+    (if (equal nowpos "gold") (get-item "gold" 50)))
   (message-area-clean)
   (message-area-insert "ゲーム終了\n"))
 
@@ -190,7 +219,7 @@
     (move-to-column (+ 7 (* x-pos 2)))))
 
     
-(defun print-nowpos ()
+(defun getinfo-nowpos ()
   "現在位置の情報を表示."
   (setq nowpos (get-place nowpos-y nowpos-x)))
   ;; (message-area-insert
@@ -250,7 +279,7 @@
           (progn
             (message-area-insert "勇者はモンスターを倒した")
             (win-at-monster)
-            (print-nowpos)
+            (getinfo-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
@@ -333,31 +362,91 @@
   (insert "\n")
   (insert "\n")
   (insert "\n")
-  
-)
+  )
+
+(defun disp-info (str str-list)
+  "(デバッグ用) STR の情報を出力する.\n STR-LIST: strのリスト."
+  (interactive)
+  (goto-char (point-max))
+  (search-backward (concat str "-info-area"))
+  (forward-line 1)
+  (insert ";;------------------- ")
+  (insert (current-time-string))
+  (insert " -----\n")
+  (while str-list
+    (insert (format ";; y:%d x:%d <- %s\n"
+                    (car (car str-list))
+                    (car (cdr (car str-list)))
+                    str))
+    (setq str-list (cdr str-list))))
+
+;; (defun disp-monster-info ()
+;;   "(デバッグ用) モンスター情報."
+;;   (interactive)
+;;   (goto-char (point-max))
+;;   (search-backward "monster-info-area")
+;;   (forward-line 1)
+;;   (insert ";;-------------------- ")
+;;   (insert (current-time-string))
+;;   (insert " ----\n")
+;;   (while monster-list
+;;     (insert (format ";; y:%d x:%d <- monster\n"
+;;                     (car (car monster-list))
+;;                     (car (cdr (car monster-list)))))
+;;     (setq monster-list (cdr monster-list))))
+
 
 (defun disp-monster-info ()
   "(デバッグ用) モンスター情報."
-  (interactive)
-  (goto-char (point-max))
-  (search-backward "monster-info-area")
-  (forward-line 1)
-  (insert ";;-------------------- ")
-  (insert (current-time-string))
-  (insert " ----\n")
-  (while monster-list
-    (insert (format ";; y:%d x:%d <- monster\n"
-                    (car (car monster-list))
-                    (car (cdr (car monster-list)))))
-    (setq monster-list (cdr monster-list))))
+  (disp-info "monster" monster-list))
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
+;;------------------- Mon Mar  8 08:08:38 2021 -----
+;; y:3 x:5 <- monster
+;; y:6 x:5 <- monster
+;; y:0 x:9 <- monster
+;; y:9 x:8 <- monster
+;; y:4 x:4 <- monster
+;; y:4 x:5 <- monster
+;; y:4 x:3 <- monster
+;; y:2 x:9 <- monster
+;; y:6 x:4 <- monster
+;; y:7 x:6 <- monster
 
 
 
+(defun disp-gold-info ()
+  "(デバッグ用) ゴールド情報."
+  (disp-info "gold" gold-list))
 
-;; 修正時刻: Sun Mar  7 21:07:14 2021
+;; ゴールド情報をここに出力する.
+;; gold-info-area
+;;------------------- Mon Mar  8 08:08:38 2021 -----
+;; y:3 x:1 <- gold
+;; y:0 x:4 <- gold
+;; y:2 x:4 <- gold
+;; y:1 x:6 <- gold
+;; y:9 x:6 <- gold
+;; y:6 x:5 <- gold
+;; y:1 x:7 <- gold
+;; y:8 x:5 <- gold
+;; y:9 x:1 <- gold
+;; y:8 x:0 <- gold
+;; y:1 x:2 <- gold
+;; y:4 x:3 <- gold
+;; y:7 x:8 <- gold
+;; y:2 x:3 <- gold
+;; y:8 x:9 <- gold
+;; y:3 x:0 <- gold
+;; y:5 x:5 <- gold
+;; y:8 x:7 <- gold
+;; y:5 x:7 <- gold
+;; y:1 x:9 <- gold
+
+
+
+;; 修正時刻: Mon Mar  8 08:15:33 2021
 
 (provide 'attack)
 ;;; attack.el ends here
