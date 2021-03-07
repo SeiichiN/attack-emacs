@@ -36,7 +36,8 @@
 (defconst edge-max 10)                  ; 1辺のマス数。
 
 (defconst attack-power '((0 . 10) (1 . 20) (2 . 30) (3 . 40) (4 . 50)))
-
+;; (defconst start-p 397)
+(defconst message-area-line 24)
 
 (defun get-place (y x)
   "(Y X)位置のセルの内容を取得する."
@@ -64,23 +65,24 @@
 ;; (aset place 4 (make-vector 5 nil))
 
 
-(defun set-power ()
-    (cdr (assoc (random 5) attack-power)))
+;; (defun set-power ()
+;;     (cdr (assoc (random 5) attack-power)))
 
-(defun get-monster-name (mon)
-  (interactive)
-  (cdr (assoc 'name mon)))
+;; (defun get-monster-name (mon)
+;;   (interactive)
+;;   (cdr (assoc 'name mon)))
 
 (defun select-monster ()
+  "モンスターを決める."
   (cdr (assoc (random 3) alist-monster)))
 
-(defun monster-attack ()
+(defun decide-monster ()
+  "ここで始めて monster の種類を決める。-- select-monster \n それから、モンスターの攻撃力、耐久力を決める."
   (interactive)
   (let ((mons (select-monster))
         mons-name
         mons-attack-p
         mons-life-p)
-    ;; (let ((mons "oak"))
     (cond
      ((equal mons "goblin")
       (progn
@@ -121,7 +123,8 @@
   (interactive)
   (make-area))
 
-
+;; ゲーム開始時には、どこに monster がいるかはわかっているが、
+;; ゴブリンなのかオークなのかドラゴンなのかは、決まっていない。
 (defun game ()
   "ゲーム開始コマンド."
   (interactive)
@@ -130,14 +133,19 @@
   (setq game-status "play")                  ; "play" -- ゲーム続行
   (setq nowpos-y (random edge-max))          ; 開始時の y位置
   (setq nowpos-x (random edge-max))          ; 開始時の x位置
+  (move-cursor-first-and-print nowpos-y nowpos-x)
   (print-nowpos)                             ; 開始時の位置の情報
-  (if (equal nowpos "monster")
-      (monster-attack))                      ; 現在位置にモンスターがいれば
+  (if (equal nowpos "monster")               ; ゲーム開始いきなり...
+      (decide-monster))                      ; ...現在位置にモンスターがいれば
   (while (equal game-status "play")          ; "play"の間は続行
     (move)                                   ; プレイヤーの移動
     (print-nowpos)                           ; 移動した位置の情報を表示
-    (if (equal nowpos "monster") (monster-attack)))  ; もしモンスターがいたら
-  (insert "ゲーム終了"))
+    (move-cursor nowpos-y nowpos-x)
+    (print-cursor)
+    (if (equal nowpos "monster") (decide-monster)))  ; もしモンスター
+                                        ; がいたら
+  (message-area-clean)
+  (message-area-insert "ゲーム終了\n"))
 
 (defun move ()
   "プレイヤーの移動."
@@ -163,11 +171,51 @@
      ((equal dir "q")                        ; 'q'が押されたら
       (setq game-status "end")))))           ; game-status を "end" にする
 
+(defun move-cursor-first-and-print (y-pos x-pos)
+  "ゲーム開始l Y-POS X-POS にカーソルを移動."
+  (move-to-window-line (+ y-pos 9))
+  (move-to-column (+ 7 (* x-pos 2)))
+  (insert-char ?@ 1)
+  (delete-char 1))
+
+
+(defun move-cursor (y-pos x-pos)
+  "現在地点を . にして Y-POS X-POS にカーソルを移動."
+  (let ((current-p (point))
+        new-point)
+    (goto-char (- current-p 1))
+    (insert-char ?. 1)
+    (delete-char 1)
+    (move-to-window-line (+ y-pos 9))
+    (move-to-column (+ 7 (* x-pos 2)))))
+
+    
 (defun print-nowpos ()
   "現在位置の情報を表示."
   (setq nowpos (get-place nowpos-y nowpos-x))
-  (insert (format "現在位置 Y:%d X:%d\n" nowpos-y nowpos-x))
-  (insert (format " -- %s\n" nowpos)))
+  (message-area-insert
+   (format "現在位置 Y:%d X:%d -- %s\n"
+           nowpos-y nowpos-x nowpos)))
+
+(defun print-cursor ()
+  "カーソルを表示する."
+  (insert-char ?@ 1)
+  (delete-char 1))
+
+(defun message-area-insert (str)
+  (interactive "sInput: String > ")
+  (let ((current-p (point)))
+    (move-to-window-line message-area-line)
+    (move-to-column 0)
+    (insert str)
+    (goto-char current-p)))
+
+(defun message-area-clean ()
+  (let ((current-p (point)))
+    (move-to-window-line message-area-line)
+    (move-to-column 0)
+    (kill-line 1)
+    (goto-char current-p)))
 
 (defun select-direction ()
   "移動方向を選択する."
@@ -187,7 +235,7 @@
         monster-damage
         hero-damage
         choice)          ; choice -- 戦うか逃げるか
-    (insert "モンスターが現れた。勇者はどうする？\n")
+    (message-area-insert (format "%s が現れた。勇者はどうする？\n" monster-name))
     (setq choice (read-string at-monster-menu))
     ;; a -- 攻撃。モンスターもプレーヤーもライフポイントが0以上。
     (while (and (equal choice "a") (> monster-lp 0) (> hero-lp 0))
@@ -196,19 +244,19 @@
           (setq hero-lp (attack-hero monster-name "勇者" monster-attack-p hero-lp)))
       (if (< monster-lp 1)
           (progn
-            (insert "勇者はモンスターを倒した\n")
+            (message-area-insert "勇者はモンスターを倒した\n")
             (win-at-monster)
             (print-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
-            (insert "勇者はモンスターにやられてしまった\n")
+            (message-area-insert "勇者はモンスターにやられてしまった\n")
             (setq game-status "end")
             (setq attack-end t)))
       (if (equal attack-end nil)
           (setq choice (read-string at-monster-menu))))
     (if (equal attack-end nil)
-        (insert "勇者は逃げた。ひたすら逃げた。\n"))))
+        (message-area-insert "勇者は逃げた。ひたすら逃げた。\n"))))
 
 (defun win-at-monster ()
   "モンスターをやっつけたら、その位置からモンスターを消去."
@@ -226,9 +274,9 @@
   "MONSTER-NAME が HERO を攻撃して HERO の LIFE-POINT を減らす."
   (let ((damage (random monster-attack-point)))
     (setq hero-life-point (- hero-life-point damage))
-    (insert (format "%s の攻撃!\n" monster-name))
-    (insert (format "%s は %d のダメージを負った。hpは %d になった。\n"
-                    hero damage hero-life-point))
+    (message-area-insert
+     (format "%s の攻撃! -- %s は %d のダメージを負った。hpは %d になった。\n"
+             monster-name hero damage hero-life-point))
     hero-life-point))
 
 ;; @param
@@ -243,9 +291,9 @@
   "HERO が MONSTER を攻撃して MONSTER の LIFE-POINT を減らす."
   (let ((damage (random hero-attack-point)))
     (setq monster-life-point (- monster-life-point damage))
-    (insert (format "%s の攻撃!\n" hero))
-    (insert (format "%s は %d のダメージを負った。hpは %d になった。\n"
-                    monster-name damage monster-life-point))
+    (message-area-insert
+     (format "%s の攻撃! -- %s は %d のダメージを負った。hpは %d になった。\n"
+             hero monster-name damage monster-life-point))
     monster-life-point))
 
 
@@ -264,11 +312,11 @@
   (insert "===================================================\n")
   (insert "       X\n")
   (insert "       0 1 2 3 4 5 6 7 8 9\n")
-  (insert "   Y 0|.|.|.|.|.|.|.|.|.|.|             北\n")
-  (insert "     1|.|.|.|.|.|.|.|.|.|.|             |\n")
-  (insert "     2|.|.|.|.|.|.|.|.|.|.|         西--+--東\n")
-  (insert "     3|.|.|.|.|.|.|.|.|.|.|             |\n")
-  (insert "     4|.|.|.|.|.|.|.|.|.|.|             南\n")
+  (insert "   Y 0|.|.|.|.|.|.|.|.|.|.|             n北\n")
+  (insert "     1|.|.|.|.|.|.|.|.|.|.|              |\n")
+  (insert "     2|.|.|.|.|.|.|.|.|.|.|         w西--+--東e\n")
+  (insert "     3|.|.|.|.|.|.|.|.|.|.|              |\n")
+  (insert "     4|.|.|.|.|.|.|.|.|.|.|             s南\n")
   (insert "     5|.|.|.|.|.|.|.|.|.|.|\n")
   (insert "     6|.|.|.|.|.|.|.|.|.|.|\n")
   (insert "     7|.|.|.|.|.|.|.|.|.|.|\n")
@@ -293,24 +341,11 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
-;;-------------------- Sat Mar  6 22:02:16 2021 ----
-;; y:2 x:5 <- monster
-;; y:4 x:8 <- monster
-;; y:9 x:6 <- monster
-;; y:0 x:0 <- monster
-;; y:7 x:1 <- monster
-;; y:7 x:6 <- monster
-;; y:4 x:6 <- monster
-;; y:8 x:1 <- monster
-;; y:5 x:6 <- monster
-;; y:6 x:9 <- monster
 
 
 
 
-
-
-;; 修正時刻: Sat Mar  6 22:04:43 2021
+;; 修正時刻: Sun Mar  7 13:12:34 2021
 
 (provide 'attack)
 ;;; attack.el ends here
