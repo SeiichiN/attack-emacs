@@ -134,12 +134,12 @@
   (setq nowpos-y (random edge-max))          ; 開始時の y位置
   (setq nowpos-x (random edge-max))          ; 開始時の x位置
   (move-cursor-first-and-print nowpos-y nowpos-x)
-  ;; (print-nowpos)                             ; 開始時の位置の情報
+  (print-nowpos)                             ; 開始時の位置の情報
   (if (equal nowpos "monster")               ; ゲーム開始いきなり...
       (decide-monster))                      ; ...現在位置にモンスターがいれば
   (while (equal game-status "play")          ; "play"の間は続行
     (move)                                   ; プレイヤーの移動
-    ;; (print-nowpos)                           ; 移動した位置の情報を表示
+    (print-nowpos)                           ; 移動した位置の情報を表示
     (move-cursor nowpos-y nowpos-x)
     (print-cursor)
     (if (equal nowpos "monster") (decide-monster)))  ; もしモンスター
@@ -192,10 +192,10 @@
     
 (defun print-nowpos ()
   "現在位置の情報を表示."
-  (setq nowpos (get-place nowpos-y nowpos-x))
-  (message-area-insert
-   (format "現在位置 Y:%d X:%d -- %s\n"
-           nowpos-y nowpos-x nowpos)))
+  (setq nowpos (get-place nowpos-y nowpos-x)))
+  ;; (message-area-insert
+  ;;  (format "現在位置 Y:%d X:%d -- %s\n"
+  ;;          nowpos-y nowpos-x nowpos)))
 
 (defun print-cursor ()
   "カーソルを表示する."
@@ -250,7 +250,7 @@
           (progn
             (message-area-insert "勇者はモンスターを倒した")
             (win-at-monster)
-            ;; (print-nowpos)
+            (print-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
@@ -353,22 +353,11 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
-;;-------------------- Sun Mar  7 16:04:05 2021 ----
-;; y:5 x:0 <- monster
-;; y:2 x:5 <- monster
-;; y:6 x:9 <- monster
-;; y:1 x:4 <- monster
-;; y:0 x:8 <- monster
-;; y:2 x:6 <- monster
-;; y:4 x:8 <- monster
-;; y:6 x:6 <- monster
-;; y:6 x:0 <- monster
-;; y:6 x:8 <- monster
 
 
 
 
-;; 修正時刻: Sun Mar  7 16:10:39 2021
+;; 修正時刻: Sun Mar  7 21:07:14 2021
 
 (provide 'attack)
 ;;; attack.el ends here
