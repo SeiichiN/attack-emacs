@@ -418,7 +418,7 @@
 
 
 
-;; 修正時刻: Mon Mar  8 13:31:15 2021
+;; 修正時刻: Mon Mar  8 16:29:04 2021
 
 (provide 'attack)
 ;;; attack.el ends here
