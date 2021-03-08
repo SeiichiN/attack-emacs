@@ -422,17 +422,6 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
-;;------------------- Tue Mar  9 07:14:01 2021 -----
-;; y:3 x:7 <- monster
-;; y:7 x:1 <- monster
-;; y:8 x:3 <- monster
-;; y:9 x:0 <- monster
-;; y:8 x:6 <- monster
-;; y:6 x:7 <- monster
-;; y:7 x:2 <- monster
-;; y:1 x:0 <- monster
-;; y:5 x:6 <- monster
-;; y:5 x:3 <- monster
 
 
 
@@ -442,16 +431,10 @@
 
 ;; ゴールド情報をここに出力する.
 ;; gold-info-area
-;;------------------- Tue Mar  9 07:14:01 2021 -----
-;; y:3 x:6 <- gold
-;; y:0 x:9 <- gold
-;; y:3 x:5 <- gold
-;; y:1 x:1 <- gold
-;; y:6 x:1 <- gold
 
 
 
-;; 修正時刻: Tue Mar  9 07:27:54 2021
+;; 修正時刻: Tue Mar  9 08:05:02 2021
 
 (provide 'attack)
 ;;; attack.el ends here
