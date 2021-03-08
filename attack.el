@@ -28,9 +28,9 @@
 (defvar inventory-list)                 ; プレイヤーの持ち物
 
 (defvar monster-list)
-(defconst goblin '((name . "ゴブリン") (attack-point . 20) (life-point . 60)))
-(defconst oak    '((name . "オーク")   (attack-point . 50) (life-point . 80)))
-(defconst dragon '((name . "ドラゴン") (attack-point . 80) (life-point . 100)))
+(defconst goblin '((name . "ゴブリン") (attack-point . 20) (life-point . 60) (gold . 10)))
+(defconst oak    '((name . "オーク")   (attack-point . 50) (life-point . 80) (gold . 80)))
+(defconst dragon '((name . "ドラゴン") (attack-point . 80) (life-point . 100) (gold . 200)))
 (defconst alist-monster '((0 . "goblin") (1 . "oak") (2 . "dragon")))
 
 (defconst at-monster-menu "a: 戦う   b: 逃げる > ")
@@ -297,7 +297,7 @@
       (if (< monster-lp 1)
           (progn
             (message-area-insert "勇者はモンスターを倒した\n")
-            (win-at-monster)
+            (win-at-monster monster-name)
             (getinfo-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
@@ -313,8 +313,21 @@
           (message-area-insert "勇者は逃げた。ひたすら逃げた。\n")
           (message-area-insert "...")))))
 
-(defun win-at-monster ()
-  "モンスターをやっつけたら、その位置からモンスターを消去."
+(defun win-at-monster (mons-name)
+  "モンスター(MONS-NAME)をやっつけたら、その位置からモンスターを消去."
+  (interactive "sInput: mons-name>")
+  (let (mons-gold)
+    (cond
+     ((equal mons-name "goblin")
+      (setq mons-gold (cdr (assoc 'gold goblin))))
+     ((equal mons-name "oak")
+      (setq mons-gold (cdr (assoc 'gold oak))))
+     ((equal mons-name "dragon")
+      (setq mons-gold (cdr (assoc 'gold dragon))))
+     t)
+    (setq money (cdr (assoc 'gold inventory-list)))
+    (setq new-money (+ money mons-gold))
+    (push (cons 'gold new-money) inventory-list))
   (set-place nowpos-y nowpos-x nil))
 
 ;; @param
@@ -406,6 +419,17 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
+;;------------------- Mon Mar  8 19:44:02 2021 -----
+;; y:7 x:7 <- monster
+;; y:4 x:0 <- monster
+;; y:6 x:1 <- monster
+;; y:1 x:4 <- monster
+;; y:7 x:3 <- monster
+;; y:0 x:8 <- monster
+;; y:1 x:2 <- monster
+;; y:3 x:9 <- monster
+;; y:4 x:3 <- monster
+;; y:6 x:2 <- monster
 
 
 
@@ -415,10 +439,16 @@
 
 ;; ゴールド情報をここに出力する.
 ;; gold-info-area
+;;------------------- Mon Mar  8 19:44:02 2021 -----
+;; y:6 x:3 <- gold
+;; y:8 x:2 <- gold
+;; y:0 x:3 <- gold
+;; y:8 x:8 <- gold
+;; y:6 x:5 <- gold
 
 
 
-;; 修正時刻: Mon Mar  8 16:29:04 2021
+;; 修正時刻: Mon Mar  8 20:50:42 2021
 
 (provide 'attack)
 ;;; attack.el ends here
