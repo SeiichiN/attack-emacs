@@ -112,7 +112,7 @@
         (setq mons-attack-p (cdr (assoc 'attack-point dragon)))
         (setq mons-life-p (cdr (assoc 'life-point dragon)))))
      t)
-    (attack mons-name mons-attack-p mons-life-p)))
+    (attack mons mons-name mons-attack-p mons-life-p)))
 
 
 (defun set-monster ()
@@ -275,7 +275,7 @@
     direction))
 
 
-(defun attack (monster-name monster-attack-p monster-life-p)
+(defun attack (mons monster-name monster-attack-p monster-life-p)
   "モンスターを攻撃する."
   (interactive)
   (let ((monster-lp monster-life-p)    ; monster-lp -- モンスターのライフポイント
@@ -296,13 +296,15 @@
           (setq hero-lp (attack-hero monster-name "勇者" monster-attack-p hero-lp)))
       (if (< monster-lp 1)
           (progn
-            (message-area-insert "勇者はモンスターを倒した\n")
-            (win-at-monster monster-name)
+            (message-area-insert
+             (format "勇者は %s を倒した\n" monster-name))
+            (win-at-monster mons)
             (getinfo-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
-            (message-area-insert "勇者はモンスターにやられてしまった\n")
+            (message-area-insert
+             (format "勇者は %s にやられてしまった\n" monster-name))
             (setq game-status "end")
             (setq attack-end t)))
       (if (equal attack-end nil)
@@ -314,7 +316,7 @@
           (message-area-insert "...")))))
 
 (defun win-at-monster (mons-name)
-  "モンスター(MONS-NAME)をやっつけたら、その位置からモンスターを消去."
+  "モンスター(MONS-NAME)をやっつけたら、その位置からモンスターを消去.\nまた、ランダムな gold を入手."
   (interactive "sInput: mons-name>")
   (let (mons-gold)
     (cond
@@ -327,7 +329,8 @@
      t)
     (setq money (cdr (assoc 'gold inventory-list)))
     (setq new-money (+ money mons-gold))
-    (push (cons 'gold new-money) inventory-list))
+    (push (cons 'gold new-money) inventory-list)
+    (message-area-insert (format "goldを %d 手に入れた\n" mons-gold)))
   (set-place nowpos-y nowpos-x nil))
 
 ;; @param
@@ -419,17 +422,17 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
-;;------------------- Mon Mar  8 19:44:02 2021 -----
-;; y:7 x:7 <- monster
-;; y:4 x:0 <- monster
-;; y:6 x:1 <- monster
-;; y:1 x:4 <- monster
-;; y:7 x:3 <- monster
-;; y:0 x:8 <- monster
-;; y:1 x:2 <- monster
-;; y:3 x:9 <- monster
-;; y:4 x:3 <- monster
-;; y:6 x:2 <- monster
+;;------------------- Tue Mar  9 07:14:01 2021 -----
+;; y:3 x:7 <- monster
+;; y:7 x:1 <- monster
+;; y:8 x:3 <- monster
+;; y:9 x:0 <- monster
+;; y:8 x:6 <- monster
+;; y:6 x:7 <- monster
+;; y:7 x:2 <- monster
+;; y:1 x:0 <- monster
+;; y:5 x:6 <- monster
+;; y:5 x:3 <- monster
 
 
 
@@ -439,16 +442,16 @@
 
 ;; ゴールド情報をここに出力する.
 ;; gold-info-area
-;;------------------- Mon Mar  8 19:44:02 2021 -----
-;; y:6 x:3 <- gold
-;; y:8 x:2 <- gold
-;; y:0 x:3 <- gold
-;; y:8 x:8 <- gold
-;; y:6 x:5 <- gold
+;;------------------- Tue Mar  9 07:14:01 2021 -----
+;; y:3 x:6 <- gold
+;; y:0 x:9 <- gold
+;; y:3 x:5 <- gold
+;; y:1 x:1 <- gold
+;; y:6 x:1 <- gold
 
 
 
-;; 修正時刻: Mon Mar  8 20:50:42 2021
+;; 修正時刻: Tue Mar  9 07:27:54 2021
 
 (provide 'attack)
 ;;; attack.el ends here
