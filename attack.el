@@ -38,7 +38,6 @@
 (defconst edge-max 10)                  ; 1辺のマス数。
 
 (defconst attack-power '((0 . 10) (1 . 20) (2 . 30) (3 . 40) (4 . 50)))
-;; (defconst start-p 397)
 (defconst message-area-line 22)
 
 (defvar gold-list '())
@@ -191,7 +190,7 @@
   (message-area-insert "ゲーム終了\n"))
 
 (defun move ()
-  "プレイヤーの移動."
+  "プレイヤーの移動およびコマンドの入力."
   (let (dir)                                 ; dir -- ユーザーの入力
     (setq  dir (select-direction))
     (cond
@@ -237,6 +236,7 @@
     (move-to-column (+ 7 (* x-pos 2)))))
 
 (defun show-inventory ()
+  "勇者の持ち物の一覧を見る."
   (message-area-insert (format "持ち物 gold:%d  weapon:%s\n"
                                (cdr (assoc 'gold inventory-list))
                                (cdr (assoc 'weapon inventory-list)))))
@@ -279,7 +279,11 @@
 
 
 (defun attack (mons monster-name monster-attack-p monster-life-p)
-  "モンスターを攻撃する."
+  "モンスターを攻撃する.
+MONS :goblin/oak/dragon
+MONSTER-NAME :ゴブリン・オーク・ドラゴン
+MONSTER-ATTACK-P :モンスターの攻撃力
+MONSTER-LIFE-P :モンスターの耐久力"
   (interactive)
   (let ((monster-lp monster-life-p)    ; monster-lp -- モンスターのライフポイント
         (hero-lp 100)                  ; hero-lp -- 勇者のライフポイント
@@ -462,7 +466,7 @@
 
 
 
-;; 修正時刻: Tue Mar  9 13:35:50 2021
+;; 修正時刻: Tue Mar  9 16:19:46 2021
 
 (provide 'attack)
 ;;; attack.el ends here
