@@ -1,0 +1,51 @@
+;;; package -- Summery
+;;;
+;; attack.log
+
+;; モンスター情報をここに出力する.
+;; monster-info-area
+;;------------------- Tue Mar  9 13:37:25 2021 -----
+;; y:6 x:7 <- monster
+;; y:7 x:0 <- monster
+;; y:5 x:2 <- monster
+;; y:6 x:6 <- monster
+;; y:9 x:6 <- monster
+;; y:8 x:8 <- monster
+;; y:7 x:6 <- monster
+;; y:8 x:7 <- monster
+;; y:6 x:2 <- monster
+;; y:8 x:0 <- monster
+;;------------------- Tue Mar  9 13:36:24 2021 -----
+;; y:2 x:0 <- monster
+;; y:7 x:1 <- monster
+;; y:0 x:5 <- monster
+;; y:9 x:5 <- monster
+;; y:6 x:6 <- monster
+;; y:9 x:0 <- monster
+;; y:0 x:7 <- monster
+;; y:1 x:1 <- monster
+;; y:3 x:2 <- monster
+;; y:1 x:0 <- monster
+
+
+
+
+;; ゴールド情報をここに出力する.
+;; gold-info-area
+;;------------------- Tue Mar  9 13:37:27 2021 -----
+;; y:2 x:5 <- gold
+;; y:7 x:5 <- gold
+;; y:7 x:4 <- gold
+;; y:6 x:1 <- gold
+;; y:1 x:9 <- gold
+;;------------------- Tue Mar  9 13:36:25 2021 -----
+;; y:9 x:9 <- gold
+;; y:9 x:3 <- gold
+;; y:3 x:8 <- gold
+;; y:5 x:8 <- gold
+;; y:6 x:7 <- gold
+
+
+
+
+;; 修正時刻: Tue Mar  9 13:37:29 2021

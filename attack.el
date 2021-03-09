@@ -44,6 +44,7 @@
 (defvar gold-list '())
 (defconst gold-min 20)
 (defconst gold-max 80)                  ; 20...100 にするつもり.
+(defconst logfile "attack.log")
 
 (defun get-place (y x)
   "(Y X)位置のセルの内容を取得する."
@@ -185,8 +186,8 @@
           (let (money)
             (setq money (+ (random gold-max) gold-min))
             (get-item "gold" money)
+            (clean-message-area)
             (message-area-insert (format "%d の gold を手に入れた\n" money))))))
-  (message-area-clean)
   (message-area-insert "ゲーム終了\n"))
 
 (defun move ()
@@ -213,7 +214,9 @@
      ((equal dir "i")
       (show-inventory))
      ((equal dir "q")                        ; 'q'が押されたら
-      (setq game-status "end")))))           ; game-status を "end" にする
+      (setq game-status "end"))))           ; game-status を "end" にする
+  ;; (clean-message-area)
+  )
 
 (defun move-cursor-first-and-print (y-pos x-pos)
   "ゲーム開始l Y-POS X-POS にカーソルを移動."
@@ -260,12 +263,12 @@
     (insert "\n")
     (goto-char current-p)))
 
-(defun message-area-clean ()
-  (let ((current-p (point)))
-    (move-to-window-line message-area-line)
-    (move-to-column 0)
-    (kill-line 1)
-    (goto-char current-p)))
+;; (defun message-area-clean ()
+;;   (let ((current-p (point)))
+;;     (move-to-window-line message-area-line)
+;;     (move-to-column 0)
+;;     (kill-line 1)
+;;     (goto-char current-p)))
 
 (defun select-direction ()
   "移動方向を選択する."
@@ -287,8 +290,9 @@
         choice)          ; choice -- 戦うか逃げるか
     (message-area-insert (format "%s が現れた。勇者はどうする？\n"
                                  monster-name))
-    (message-area-insert "...")
+    ;; (message-area-insert "...\n")
     (setq choice (read-string at-monster-menu))
+    (clean-message-area)
     ;; a -- 攻撃。モンスターもプレーヤーもライフポイントが0以上。
     (while (and (equal choice "a") (> monster-lp 0) (> hero-lp 0))
       (setq monster-lp (attack-monster "勇者" monster-name hero-attack-p monster-lp))
@@ -296,6 +300,7 @@
           (setq hero-lp (attack-hero monster-name "勇者" monster-attack-p hero-lp)))
       (if (< monster-lp 1)
           (progn
+            (clean-message-area)
             (message-area-insert
              (format "勇者は %s を倒した\n" monster-name))
             (win-at-monster mons)
@@ -303,17 +308,23 @@
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
+            (clean-message-area)
             (message-area-insert
              (format "勇者は %s にやられてしまった\n" monster-name))
             (setq game-status "end")
             (setq attack-end t)))
       (if (equal attack-end nil)
-          (setq choice (read-string at-monster-menu)))
-      (message-area-insert "..."))
+          (progn
+            (setq choice (read-string at-monster-menu))
+            (clean-message-area)))
+      ;; (message-area-insert "...\n")
+      )
     (if (equal attack-end nil)
         (progn
+          (clean-message-area)
           (message-area-insert "勇者は逃げた。ひたすら逃げた。\n")
-          (message-area-insert "...")))))
+          ;; (message-area-insert "...\n")
+          ))))
 
 (defun win-at-monster (mons-name)
   "モンスター(MONS-NAME)をやっつけたら、その位置からモンスターを消去.\nまた、ランダムな gold を入手."
@@ -346,7 +357,7 @@
   (let ((damage (random monster-attack-point)))
     (setq hero-life-point (- hero-life-point damage))
     (message-area-insert
-     (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。"
+     (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。\n"
              monster-name hero damage hero hero-life-point))
     hero-life-point))
 
@@ -363,7 +374,7 @@
   (let ((damage (random hero-attack-point)))
     (setq monster-life-point (- monster-life-point damage))
     (message-area-insert
-     (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。"
+     (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。\n"
              hero monster-name damage monster-name  monster-life-point))
     monster-life-point))
 
@@ -399,7 +410,24 @@
   (insert "\n")
   )
 
+(defun clean-message-area ()
+  "メッセージエリアをクリアする."
+  (let ((current-p (point)))
+    (goto-line (+ message-area-line 1))
+    (beginning-of-line)
+    (delete-region (point) (point-max))
+    (goto-char current-p)))
+
+
 (defun disp-info (str str-list)
+  "(デバッグ用)情報をファイルに出力する。STR:情報対象、STR-LIST:情報対象のリスト."
+  (save-excursion
+    (set-buffer (find-file-noselect logfile))
+    (disp-info-in str str-list)
+    (write-file logfile)))
+
+
+(defun disp-info-in (str str-list)
   "(デバッグ用) STR の情報を出力する.\n STR-LIST: strのリスト."
   (interactive)
   (goto-char (point-max))
@@ -434,7 +462,7 @@
 
 
 
-;; 修正時刻: Tue Mar  9 08:05:02 2021
+;; 修正時刻: Tue Mar  9 13:35:50 2021
 
 (provide 'attack)
 ;;; attack.el ends here
