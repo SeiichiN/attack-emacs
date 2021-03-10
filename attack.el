@@ -26,6 +26,9 @@
 (defvar nowpos)                         ; プレイヤーの現在位置の内容。初期値は nil。
                                         ; "monster" が格納されている場合もある。
 (defvar inventory-list)                 ; プレイヤーの持ち物
+;; goldをゲットしたら t にする。そして、"goldをゲットした" と表示したら、すぐに
+;; 消すために nil にもどす
+(defvar show-short-message nil)
 
 (defvar monster-list)
 (defconst goblin '((name . "ゴブリン") (attack-point . 20) (life-point . 60) (gold . 10)))
@@ -45,6 +48,9 @@
 (defconst gold-max 80)                  ; 20...100 にするつもり.
 (defconst logfile "attack.log")
 
+(defconst hero-life-point 100)          ; default 100
+(defconst hero-attack-point 30)        ; default 30
+
 (defun get-place (y x)
   "(Y X)位置のセルの内容を取得する."
   (aref (aref place y) x))
@@ -52,6 +58,15 @@
 (defun set-place (y x thing)
   "(Y X)位置のセルに THING をセットする."
   (aset (aref place y) x thing))
+
+(defun count-list (lst)
+  "リスト(LST)の数を返す."
+  (defun count-list-in (lst n)
+    (if (null (car lst))
+        n
+      (count-list-in (cdr lst) (+ n 1))))
+  (count-list-in lst 0))
+
 
 (defun set-inventory ()
   "INVENTORY-LIST を初期化する."
@@ -130,6 +145,17 @@
               )))))
   (disp-monster-info))        ; デバッグ用にモンスターの位置を出力する
 
+
+(defun delete-monster-from-list (y x mons-list)
+  "Y X の地点のモンスターを MONS-LIST から削除する."
+  (interactive "nY: \nnX: ")
+  (cond
+   ((null mons-list) nil)
+   ((equal (list y x) (car mons-list))
+    (delete-monster-from-list y x (cdr mons-list)))
+   (t (cons (car mons-list) (delete-monster-from-list y x (cdr mons-list))))))
+
+
 (defun set-gold ()
   "ゴールドをランダムに配置する."
   (interactive)
@@ -146,19 +172,36 @@
   (disp-gold-info))
 
 (defun get-item (item val)
-  "ITEM -- アイテムの種類   VAL -- その値・名前."
+  "アイテムを取得したら、それを持物リストに加える.
+ITEM -- アイテムの種類   VAL -- その値・名前."
   (interactive "sItem: \nnVal:")
   (cond
    ((equal item "gold")
     (let (newval)
       (setq newval (+ (cdr (assoc 'gold inventory-list)) val))
       (push (cons 'gold newval) inventory-list)))
-   t))
+   t)
+  ;; そのセルを空にする.
+  (set-place nowpos-y nowpos-x nil))
 
 (defun game-pre ()
   "ゲームエリアの作成だけをする."
   (interactive)
   (make-area))
+
+(defun game-end ()
+  "ゲーム終了."
+  (let (str)
+    (setq str (concat "----------------------\n"
+                      "ゲーム終了\n"
+                      "獲得gold:%d\n"
+                      "残りモンスター:%d\n"
+                      "----------------------\n"))
+    (message-area-insert
+     (format str
+             (cdr (assoc 'gold inventory-list))
+             (count-list monster-list)))))
+
 
 ;; ゲーム開始時には、どこに monster がいるかはわかっているが、
 ;; ゴブリンなのかオークなのかドラゴンなのかは、決まっていない。
@@ -175,6 +218,7 @@
   (if (equal nowpos "monster")               ; ゲーム開始いきなり...
       (decide-monster))                      ; ...現在位置にモンスターがいれば
   (while (equal game-status "play")          ; "play"の間は続行
+    (if (equal game-status "end") (game-end))
     (move)                                   ; プレイヤーの移動
     (getinfo-nowpos)                           ; 移動した位置の情報を表示
     (move-cursor nowpos-y nowpos-x)
@@ -183,11 +227,14 @@
     (if (equal nowpos "gold")                ; gold だったら
         (progn
           (let (money)
+            (setq show-short-message t)
+            ;; 0...gold-max --> gold-min...gold-max + gold-min
             (setq money (+ (random gold-max) gold-min))
             (get-item "gold" money)
             (clean-message-area)
             (message-area-insert (format "%d の gold を手に入れた\n" money))))))
-  (message-area-insert "ゲーム終了\n"))
+  (if (equal game-status "end")
+      (game-end)))
 
 (defun move ()
   "プレイヤーの移動およびコマンドの入力."
@@ -214,8 +261,11 @@
       (show-inventory))
      ((equal dir "q")                        ; 'q'が押されたら
       (setq game-status "end"))))           ; game-status を "end" にする
-  ;; (clean-message-area)
-  )
+  ;; show-short-message が t なら clean-message-area を実行する
+  (if (equal show-short-message t)
+      (progn
+        (clean-message-area)
+        (setq show-short-message nil))))
 
 (defun move-cursor-first-and-print (y-pos x-pos)
   "ゲーム開始l Y-POS X-POS にカーソルを移動."
@@ -237,9 +287,11 @@
 
 (defun show-inventory ()
   "勇者の持ち物の一覧を見る."
-  (message-area-insert (format "持ち物 gold:%d  weapon:%s\n"
+  (clean-message-area)
+  (message-area-insert (format "持ち物 gold:%d  weapon:%s  残りモンスター:%d\n"
                                (cdr (assoc 'gold inventory-list))
-                               (cdr (assoc 'weapon inventory-list)))))
+                               (cdr (assoc 'weapon inventory-list))
+                               (count-list monster-list))))
     
 (defun getinfo-nowpos ()
   "現在位置の情報を表示."
@@ -286,12 +338,13 @@ MONSTER-ATTACK-P :モンスターの攻撃力
 MONSTER-LIFE-P :モンスターの耐久力"
   (interactive)
   (let ((monster-lp monster-life-p)    ; monster-lp -- モンスターのライフポイント
-        (hero-lp 100)                  ; hero-lp -- 勇者のライフポイント
-        (hero-attack-p 30)
+        (hero-lp hero-life-point)                  ; hero-lp -- 勇者のライフポイント
+        (hero-attack-p hero-attack-point)
         (attack-end nil)
         monster-damage
         hero-damage
         choice)          ; choice -- 戦うか逃げるか
+    (clean-message-area)
     (message-area-insert (format "%s が現れた。勇者はどうする？\n"
                                  monster-name))
     ;; (message-area-insert "...\n")
@@ -304,15 +357,19 @@ MONSTER-LIFE-P :モンスターの耐久力"
           (setq hero-lp (attack-hero monster-name "勇者" monster-attack-p hero-lp)))
       (if (< monster-lp 1)
           (progn
-            (clean-message-area)
+            ;; (clean-message-area)
             (message-area-insert
              (format "勇者は %s を倒した\n" monster-name))
             (win-at-monster mons)
+            ;; monster-list から倒したモンスターの (y x) を削除する
+            (setq monster-list
+                  (delete-monster-from-list nowpos-y nowpos-x monster-list))
+            (if (null monster-list) (setq game-status "end"))
             (getinfo-nowpos)
             (setq attack-end t)))
       (if (< hero-lp 1)
           (progn
-            (clean-message-area)
+            ;; (clean-message-area)
             (message-area-insert
              (format "勇者は %s にやられてしまった\n" monster-name))
             (setq game-status "end")
@@ -327,6 +384,7 @@ MONSTER-LIFE-P :モンスターの耐久力"
         (progn
           (clean-message-area)
           (message-area-insert "勇者は逃げた。ひたすら逃げた。\n")
+          (setq show-short-message t)
           ;; (message-area-insert "...\n")
           ))))
 
@@ -346,36 +404,38 @@ MONSTER-LIFE-P :モンスターの耐久力"
     (setq new-money (+ money mons-gold))
     (push (cons 'gold new-money) inventory-list)
     (message-area-insert (format "goldを %d 手に入れた\n" mons-gold)))
+  ;; show-short-message を t にしておいて、移動コマンドが押されたら画面消去する
+  (setq show-short-message t)
   (set-place nowpos-y nowpos-x nil))
 
 ;; @param
 ;;   monster-name -- String "goblin" / "oak" / "dragon"
 ;;   hero  -- String "勇者"
 ;;   monster-attack-point -- int モンスターの攻撃力
-;;   hero-life-point -- int heroのライフポイント
+;;   hero-life-p -- int heroのライフポイント
 ;; @return
-;;   hero-life-point -- int ダメージを減算したあとのライフポイント
+;;   hero-life-p -- int ダメージを減算したあとのライフポイント
 ;;
-(defun attack-hero (monster-name hero monster-attack-point hero-life-point)
+(defun attack-hero (monster-name hero monster-attack-point hero-life-p)
   "MONSTER-NAME が HERO を攻撃して HERO の LIFE-POINT を減らす."
   (let ((damage (random monster-attack-point)))
-    (setq hero-life-point (- hero-life-point damage))
+    (setq hero-life-p (- hero-life-p damage))
     (message-area-insert
      (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。\n"
-             monster-name hero damage hero hero-life-point))
-    hero-life-point))
+             monster-name hero damage hero hero-life-p))
+    hero-life-p))
 
 ;; @param
 ;;   hero  -- String "勇者"
 ;;   monster-name -- String "goblin" / "oak" / "dragon"
-;;   hero-attack-point -- int heroの攻撃力
+;;   hero-attack-p -- int heroの攻撃力
 ;;   monster-life-point -- int monsterのライフポイント
 ;; @return
 ;;   monster-life-point -- int ダメージを減算したあとのライフポイント
 ;;
-(defun attack-monster (hero monster-name hero-attack-point monster-life-point)
+(defun attack-monster (hero monster-name hero-attack-p monster-life-point)
   "HERO が MONSTER を攻撃して MONSTER の LIFE-POINT を減らす."
-  (let ((damage (random hero-attack-point)))
+  (let ((damage (random hero-attack-p)))
     (setq monster-life-point (- monster-life-point damage))
     (message-area-insert
      (format "%s の攻撃! -- %s は %d のダメージを負った。%s の life-pは %d になった。\n"
@@ -466,7 +526,7 @@ MONSTER-LIFE-P :モンスターの耐久力"
 
 
 
-;; 修正時刻: Tue Mar  9 16:19:46 2021
+;; 修正時刻: Wed Mar 10 13:34:34 2021
 
 (provide 'attack)
 ;;; attack.el ends here
