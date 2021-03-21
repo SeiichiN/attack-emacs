@@ -1,8 +1,18 @@
 ;;; package -- Summery
 ;;; Commentary:
 ;;; attack.el
-;;; 
-;;; p.107あたりのコードを elisp でやってみた
+;;;
+;;; ==================================================================
+;;; 遊びかた
+;;; "attack-emacs"ディレクトリを ".emacs.d" ディレクトリの中に置く。
+;;; "init.el" に、以下の記述を加える。
+;;; ----------------------------------------------------
+;;; (add-to-list 'load-path "~/.emacs.d/attack-emacs")
+;;; (load "attack">
+;;; (global-set-key "\C-cg" 'game)
+;;; ----------------------------------------------------
+;;; あとは、C-c g でゲームが始まる。
+;;; ==================================================================
 ;;;
 ;;; Code:
 
@@ -46,7 +56,7 @@
 (defvar gold-list '())
 (defconst gold-min 20)
 (defconst gold-max 80)                  ; 20...100 にするつもり.
-(defconst logfile "attack.log")
+(defconst logfile "~/.emacs.d/attack-emacs/attack.log")
 
 (defconst hero-life-point 100)          ; default 100
 (defconst hero-attack-point 30)        ; default 30
@@ -526,7 +536,7 @@ MONSTER-LIFE-P :モンスターの耐久力"
 
 
 
-;; 修正時刻: Wed Mar 10 13:34:34 2021
+;; 修正時刻: Sun Mar 21 21:59:10 2021
 
-(provide 'attack)
+;;; (provide 'attack.el)
 ;;; attack.el ends here

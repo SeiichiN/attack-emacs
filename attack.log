@@ -4,6 +4,28 @@
 
 ;; モンスター情報をここに出力する.
 ;; monster-info-area
+;;------------------- Sun Mar 21 21:52:29 2021 -----
+;; y:5 x:9 <- monster
+;; y:5 x:2 <- monster
+;; y:0 x:2 <- monster
+;; y:4 x:5 <- monster
+;; y:8 x:7 <- monster
+;; y:0 x:9 <- monster
+;; y:7 x:1 <- monster
+;; y:3 x:1 <- monster
+;; y:9 x:7 <- monster
+;; y:6 x:5 <- monster
+;;------------------- Sun Mar 21 21:43:07 2021 -----
+;; y:6 x:8 <- monster
+;; y:2 x:9 <- monster
+;; y:0 x:6 <- monster
+;; y:4 x:8 <- monster
+;; y:5 x:9 <- monster
+;; y:0 x:3 <- monster
+;; y:8 x:1 <- monster
+;; y:0 x:8 <- monster
+;; y:2 x:1 <- monster
+;; y:7 x:3 <- monster
 ;;------------------- Sun Mar 21 21:07:30 2021 -----
 ;; y:9 x:9 <- monster
 ;; y:1 x:8 <- monster
@@ -21,6 +43,18 @@
 
 ;; ゴールド情報をここに出力する.
 ;; gold-info-area
+;;------------------- Sun Mar 21 21:52:30 2021 -----
+;; y:8 x:3 <- gold
+;; y:1 x:3 <- gold
+;; y:4 x:7 <- gold
+;; y:8 x:8 <- gold
+;; y:8 x:9 <- gold
+;;------------------- Sun Mar 21 21:43:11 2021 -----
+;; y:6 x:4 <- gold
+;; y:4 x:4 <- gold
+;; y:2 x:0 <- gold
+;; y:3 x:8 <- gold
+;; y:0 x:2 <- gold
 ;;------------------- Sun Mar 21 21:07:33 2021 -----
 ;; y:0 x:8 <- gold
 ;; y:5 x:2 <- gold
@@ -31,4 +65,4 @@
 
 
 
-;; 修正時刻: Sun Mar 21 21:07:36 2021
+;; 修正時刻: Sun Mar 21 21:52:31 2021
